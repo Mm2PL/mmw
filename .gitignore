@@ -1,0 +1,7 @@
+__pycache__/*
+.gitignore
+.flake.sh
+.flake.sh~
+mmw.pyc
+mmw3.pyc
+oldmmwtest.py
