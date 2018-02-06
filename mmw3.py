@@ -3,6 +3,12 @@
 # Name: Maciek's aMazing Windows
 # Author: Maciek
 import sys
+import re
+try:
+    import termios
+    import tty
+except ImportError as e:
+    pass
 
 
 def printList(list):
@@ -29,69 +35,208 @@ def longInput(prompt, end="empty"):
         else:
             string = string + "\n" + a
 
+# Font: Basic
+# Styles
+# .d8888. d888888b db    db db      d88888b .d8888.
+# 88'  YP `~~88~~' `8b  d8' 88      88'     88'  YP
+# `8bo.      88     `8bd8'  88      88ooooo `8bo.
+#   `Y8b.    88       88    88      88~~~~~   `Y8b.
+# db   8D    88       88    88booo. 88.     db   8D
+# `8888Y'    YP       YP    Y88888P Y88888P `8888Y'
+
+
+class Styles():
+    UNICODE = {
+        "CornerUpLeft": "\u250C", "CornerUpRight": "\u2510",
+        "CornerDownLeft": "\u2514", "CornerDownRight": "\u2518",
+        "TitleFiller": "\u2500", "TextFiller": " ",
+        "ButtonSelected": " [>{button}<] ",
+        "ButtonNotSelected": " [ {button} ] ",
+        "BorderVertical": "\u2502", "BorderHorizontal": "\u2500",
+        "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
+        "CornerGeneric": "+",
+        "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}"}
+    UNICODE_BOLD = {
+        "CornerUpLeft": "\u250F", "CornerUpRight": "\u2513",
+        "CornerDownLeft": "\u2517", "CornerDownRight": "\u251B",
+        "TitleFiller": "\u2501", "TextFiller": " ",
+        "ButtonSelected": " [>{button}<] ",
+        "ButtonNotSelected": " [ {button} ] ",
+        "BorderVertical": "\u2503", "BorderHorizontal": "\u2501",
+        "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
+        "CornerGeneric": "+",
+        "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}"}
+    DEFAULT = {
+        "CornerUpLeft": "+", "CornerUpRight": "+",
+        "CornerDownLeft": "+", "CornerDownRight": "+",
+        "TitleFiller": "-", "TextFiller": " ",
+        "ButtonSelected": " [>{button}<] ",
+        "ButtonNotSelected": " [ {button} ] ",
+        "BorderVertical": "|", "BorderHorizontal": "-",
+        "MenuBar": "{name}  ", "MenuBarSelected": "|{name}| ",
+        "CornerGeneric": "+",
+        "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}"}
+    ALTERNATE = {
+        "CornerUpLeft": "/", "CornerUpRight": "\\",
+        "CornerDownLeft": "\\", "CornerDownRight": "/",
+        "TitleFiller": "-", "TextFiller": " ",
+        "ButtonSelected": " [>{button}<] ",
+        "ButtonNotSelected": " [ {button} ] ",
+        "BorderVertical": "|", "BorderHorizontal": "-",
+        "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
+        "CornerGeneric": "+",
+        "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}"}
+    STYLE_LIST = ["UNICODE", "UNICODE_BOLD", "DEFAULT", "ALTERNATE"]
+
+# Drawable
+# d8888b. d8888b.  .d8b.  db   d8b   db  .d8b.  d8888b. db      d88888b
+# 88  `8D 88  `8D d8' `8b 88   I8I   88 d8' `8b 88  `8D 88      88'
+# 88   88 88oobY' 88ooo88 88   I8I   88 88ooo88 88oooY' 88      88ooooo
+# 88   88 88`8b   88~~~88 Y8   I8I   88 88~~~88 88~~~b. 88      88~~~~~
+# 88  .8D 88 `88. 88   88 `8b d8'8b d8' 88   88 88   8D 88booo. 88.
+# Y8888D' 88   YD YP   YP  `8b8' `8d8'  YP   YP Y8888P' Y88888P Y88888P
+
 
 lastid = 0
 
 
-class Window():
-    # def setButtonProfile(self, buttons=[]):
-    #     self.buttons = buttons
-
-    def destroy(self):
-        if self.isDestroyed:
-            raise RuntimeError(self.name+": This window is already destoryed.")
-        self.isDestroyed = True
-        self.text = None
-        self.x = None
-        self.y = None
-        self.forcedWidth = None
-        self.forcedHeigth = None
-        self.buttons = None
-        self.selectedButton = None
-
+class Drawable():
     def __init__(self, name):
         self.name = name
-        self.text = ""
+        self.isDestroyed = False
         self.x = 0
         self.y = 0
-        self.isDestroyed = False
         self.forcedWidth = 0
         self.forcedHeigth = 0
-        self.buttons = []
-        self.selectedButton = -1
-        self.autoWindowResize = True
-        # True - expand the window to the texts size,
-        # False - Don't expand
         self.parent = None
-        self.handlers = {"loop": self.buttonSelectorHandler}
         global lastid
         self.id = lastid + 1
         lastid = lastid + 1
         self.priority = 0
         self.lastDraw = "N/A"
-        self.area = {"x": 0, "y": 0}
-    # def setCoords(self, x, y):
-    #     if self.isDestroyed:
-    #         raise RuntimeError(self.name+": This window is destoryed.")
-    #     self.x = x
-    #     self.y = y
-    #
-    # def setName(self, name):
-    #     if self.isDestroyed:
-    #         raise RuntimeError(self.name+": This window is destoryed.")
-    #     self.name = name
-    #
-    # def setProperty(self, property, value):
-    #     if self.isDestroyed:
-    #         raise RuntimeError(self.name+": This window is destoryed.")
-    #     if property in ["x", "y", "forcedWidth", "forcedHeigth", "name",
-    #                     "text"]:
-    #         exec("self."+property+" = value")
-    #
-    # def setText(self, text):
-    #     if self.isDestroyed:
-    #         raise RuntimeError(self.name+": This window is destoryed.")
-    #     self.text = text
+
+    def destroy(self, destroyChild=False):
+        self.checkDestroyed()
+        self.x = None
+        self.y = None
+        self.forcedWidth = None
+        self.forcedHeigth = None
+        self.isDestroyed = True
+        if destroyChild:
+            for widget in self.widgets:
+                widget.destroy(True)
+
+    def checkDestroyed(self):
+        if self.isDestroyed:
+            raise RuntimeError(self.name+": This Object is already destoryed.")
+        return
+# .88b  d88. d88888b d8b   db db    db
+# 88'YbdP`88 88'     888o  88 88    88
+# 88  88  88 88ooooo 88V8o 88 88    88
+# 88  88  88 88~~~~~ 88 V8o88 88    88
+# 88  88  88 88.     88  V888 88b  d88
+# YP  YP  YP Y88888P VP   V8P ~Y8888P'
+
+
+class Menu(Drawable):
+    def __init__(self, name):
+        super().__init__(name)
+        self.elements = [{"name": "Nie Wiem", "children": []}]
+        self.style = Styles.DEFAULT
+        self.open = -1
+        self.childopen = -1
+        self.x = 1
+        self.y = 0
+
+    def draw(self):
+        win = ["", ""]
+        offset = 0
+        for element in self.elements:
+            highLen = 0
+            for child in element["children"]:
+                if len(child["name"]) > highLen:
+                    highLen = len(child["name"])
+            element["highLen"] = highLen
+            element["offset"] = offset
+            offset = offset\
+                + len(self.style["MenuBar"]
+                      .replace("{name}", element["name"]))
+        for element in enumerate(self.elements):
+            if self.open == element[0]:
+                win[0] = win[0] + self.style["TextFiller"]\
+                    + self.style["MenuBarSelected"]\
+                    .replace("{name}", element[1]["name"])
+                win[0] = re.sub(r"^\s*", r"", win[0])
+                genericCorner = self.style["CornerGeneric"]\
+                    if len(element[1]["name"]) < element[1]["highLen"]\
+                    else ""
+                offseter = self.style["TextFiller"]\
+                    * (element[1]["offset"]+1) if element[1]["offset"] > 0\
+                    else ""
+                win.append(offseter
+                           + self.style["BorderVertical"]
+                           + (self.style["BorderHorizontal"]
+                              * len(element[1]["name"]))
+                           + genericCorner
+                           + ((element[1]["highLen"]
+                               - len(element[1]["name"]))
+                              * self.style["BorderHorizontal"])
+                           + self.style["BorderVertical"])
+                for childE in enumerate(element[1]["children"]):
+                    child = childE[1]
+                    filler = self.style["TextFiller"]\
+                        * (element[1]["highLen"] - len(child["name"]))\
+                        if element[1]["highLen"] - len(child["name"]) > 0\
+                        else ""
+                    name = self.style["MenuChildSelected"].replace(
+                        "{name}", child["name"])\
+                        if self.childopen == childE[0]\
+                        else self.style["MenuChildUnselected"].replace(
+                            "{name}", child["name"])
+                    win.append(offseter
+                               + self.style["BorderVertical"]
+                               + name
+                               + filler
+                               + self.style["BorderVertical"])
+                win.append(offseter
+                           + self.style["CornerDownLeft"]
+                           + (self.style["BorderHorizontal"]
+                              * (element[1]["highLen"]+1))
+                           + self.style["CornerDownRight"])
+            else:
+                win[0] = win[0] + self.style["TextFiller"]\
+                    + self.style["MenuBar"]\
+                    .replace("{name}", element[1]["name"])
+        # print(win)
+        return win
+
+# db   d8b   db d888888b d8b   db d8888b.  .d88b.  db   d8b   db
+# 88   I8I   88   `88'   888o  88 88  `8D .8P  Y8. 88   I8I   88
+# 88   I8I   88    88    88V8o 88 88   88 88    88 88   I8I   88
+# Y8   I8I   88    88    88 V8o88 88   88 88    88 Y8   I8I   88
+# `8b d8'8b d8'   .88.   88  V888 88  .8D `8b  d8' `8b d8'8b d8'
+#  `8b8' `8d8'  Y888888P VP   V8P Y8888D'  `Y88P'   `8b8' `8d8'
+
+
+class Window(Drawable):
+    def destroy(self, destroyChild=False):
+        super().destroy(destroyChild)
+        self.isDestroyed = True
+        self.text = None
+        self.buttons = None
+        self.selectedButton = None
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.text = ""
+        self.buttons = []
+        self.widgets = {}
+        self.selectedButton = -1
+        self.autoWindowResize = True
+        # True - expand the window to the texts size,
+        # False - Don't expand
+        self.handlers = {"loop": self.buttonSelectorHandler}
+        self.style = Styles.DEFAULT
 
     def loop(self):
         try:
@@ -114,8 +259,7 @@ class Window():
     def draw(self):
         """Internal use; Use screen.draw(window); Returns a the window as a """
         """list of strings"""
-        if self.isDestroyed:
-            raise RuntimeError(self.name+": This window is destoryed.")
+        super().checkDestroyed()
         width = 0
         # w = 0
         text = self.text
@@ -123,9 +267,15 @@ class Window():
         if self.buttons is not None:
             for i in range(len(self.buttons)):
                 if self.selectedButton == i:
-                    buttons = buttons + " [>"+self.buttons[i]+"<] "
+                    buttons = buttons + \
+                        self.style["ButtonSelected"].\
+                        replace("{button}", self.buttons[i])
+                    # " [>"+self.buttons[i]+"<] "
                 else:
-                    buttons = buttons + " [ "+self.buttons[i]+" ] "
+                    buttons = buttons + \
+                        self.style["ButtonNotSelected"].\
+                        replace("{button}", self.buttons[i])
+                    # " [ "+self.buttons[i]+" ] "
             if getDisplayLen(buttons) > width:
                 width = getDisplayLen(buttons)
         if self.forcedWidth <= 0:
@@ -139,14 +289,6 @@ class Window():
             else:
                 raise Exception("forcedWidth is required, "
                                 "if text wrap is on.")
-            # if getDisplayLen(self.name) < getDisplayLen(self.text):
-            #     width = getDisplayLen(self.text)
-            # elif getDisplayLen(self.name) > getDisplayLen(self.text):
-            #     width = getDisplayLen(self.name)
-            # else:
-            #     # When display len of self.text and self.name are equal
-            #     width = getDisplayLen(self.name)
-            # w = width - getDisplayLen(self.name)
         else:
             if self.autoWindowResize:
                 temp = text.split("\n")
@@ -169,7 +311,22 @@ class Window():
 
         spl = round((width - len(self.name))/2)
         spr = width - (spl+len(self.name))
-        win = ["/"+("-"*spl)+self.name+("-"*spr)+"\\"]
+        win = [self.style["CornerUpLeft"]
+               + (self.style["TitleFiller"]*spl)
+               + self.name
+               + (self.style["TitleFiller"]*spr)
+               + self.style["CornerUpRight"]]
+        if "menu" in self.widgets.keys():
+            state = self.widgets["menu"].getState()
+            self.widgets["menu"].forcedWidth = width
+            if not state["hidden"]:
+                win.append(self.widgets["menu"].draw())
+            if state["hideParent"]:
+                textToDraw = self.widgets["menu"].draw()
+                for i in textToDraw:
+                    win.append(self.style["BorderVertical"] + i
+                               + self.style["TextFiller"]*(width - len(i))
+                               + self.style["BorderVertical"])
         text = text.split("\n")
         for i in range(len(text)):
             diff = 0
@@ -177,144 +334,90 @@ class Window():
             if getDisplayLen(temptext) < width:
                 diff = (width) - getDisplayLen(temptext)
                 # print "@ line "+str(i)+" diff "+repr(diff
-                temptext = temptext + " "*diff
-            win.append("|"+temptext+"|")
+                temptext = temptext + self.style["TextFiller"]*diff
+            win.append(self.style["BorderVertical"]+temptext
+                       + self.style["BorderVertical"])
             # print "zzz"
         if self.forcedHeigth != -1:
-            win.append("|"+" "*(width)+"|")
+            win.append(self.style["BorderVertical"]
+                       + self.style["TextFiller"]*(width)
+                       + self.style["BorderVertical"])
             # print "aaaa"
         if buttons != [] and buttons != "":
-            # w = width - len(buttons)
             spl = round((width - len(buttons))/2)
             spr = width - (spl+len(buttons))
-            # w1 = round(w/2)
-            # w2 = w1
-            # if w % 2 != 0:
-            #     w2 = w1+1
-            win.append("|"+(spl*" ")+buttons+(spr*" ")+"|")
-        win.append("\\"+"-"*width+"/")
+            win.append(self.style["BorderVertical"]
+                       + (spl*self.style["TextFiller"])
+                       + buttons
+                       + (spr*self.style["TextFiller"])
+                       + self.style["BorderVertical"])
+        win.append(self.style["CornerDownLeft"]
+                   + (self.style["BorderHorizontal"]*width)
+                   + self.style["CornerDownRight"])
         self.lastDraw = win
-        self.area["x"] = len(win[0])
-        self.area["y"] = len(win)-1
         # print(win)
+        self.width = len(win[0])
+        self.height = len(win)
         return win
+
+
+# .d8888.  .o88b. d8888b. d88888b d88888b d8b   db
+# 88'  YP d8P  Y8 88  `8D 88'     88'     888o  88
+# `8bo.   8P      88oobY' 88ooooo 88ooooo 88V8o 88
+#   `Y8b. 8b      88`8b   88~~~~~ 88~~~~~ 88 V8o88
+# db   8D Y8b  d8 88 `88. 88.     88.     88  V888
+# `8888Y'  `Y88P' 88   YD Y88888P Y88888P VP   V8P
 
 
 class Screen():
     hide = "\033[8m"
     unhide = "\033[28m"
 
-    def getGetChar(self):
-        pass  # Windows compatibility
     try:
         import msvcrt
 
         def getChar(self):
             return msvcrt.getch()  # noqa: F821
+
         platform = "win"
     except ImportError:
-        def getGetChar(self):  # noqa F811
-            self.sys  = __import__("sys")  # noqa
-            self.tty  = __import__("tty")  # noqa
-            self.termios = __import__("termios")  # noqa
+        platform = "linux"
 
-            def getChar():
-                fd = sys.stdin.fileno()
-                old = self.termios.tcgetattr(fd)
-                try:
-                    self.tty.setraw(fd)
-                    return sys.stdin.read(1)
-                finally:
-                    self.termios.tcsetattr(fd, self.termios.TCSADRAIN, old)
-                self.platform = "linux"
-            return getChar
+        def getChar(self):
+            fd = sys.stdin.fileno()
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                return sys.stdin.read(1)
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
     def __init__(self, size=[80, 24]):
-        self.getChar = self.getGetChar()
+        # self.getChar = self.getGetChar()
         self.size = size
         self.windows = []
+        self.background = []
         self.fgcolors = [
             [
-                "black",
-                "red",
-                "green",
-                "yellow",
-                "blue",
-                "magenta",
-                "cyan",
-                "white",
-                "gray",
-                "bred",
-                "bgreen",
-                "byellow",
-                "bblue",
-                "bmagenta",
-                "bcyan",
-                "bwhite",
-                "zero",
-                "0"
+                "black", "red", "green", "yellow", "blue", "magenta", "cyan",
+                "white", "gray", "bred", "bgreen", "byellow", "bblue",
+                "bmagenta", "bcyan", "bwhite", "zero", "0"
             ],
             [
-                "30",  # black
-                "31",  # red
-                "32",  # green
-                "33",   # yellow
-                "34",  # blue
-                "35",  # magenta
-                "36",  # cyan
-                "37",  # white
-                "30;1",  # bright colors v same order as ^
-                "31;1",
-                "32;1",
-                "33;1",
-                "34;1",
-                "35;1",
-                "36;1",
-                "37;1",
-                "0",
-                "0"
+                "30", "31", "32", "33", "34", "35", "36", "37", "30;1",
+                "31;1", "32;1", "33;1", "34;1", "35;1", "36;1", "37;1",
+                "0", "0"
             ]
         ]
         self.bgcolors = [
             [
-                "black",
-                "red",
-                "green",
-                "yellow",
-                "blue",
-                "magenta",
-                "cyan",
-                "white",
-                "gray",
-                "bred",
-                "bgreen",
-                "byellow",
-                "bblue",
-                "bmagenta",
-                "bcyan",
-                "bwhite",
-                "zero",
-                "0"
+                "black", "red", "green", "yellow", "blue", "magenta", "cyan",
+                "white", "gray", "bred", "bgreen", "byellow", "bblue",
+                "bmagenta", "bcyan", "bwhite", "zero", "0"
             ],
             [
-                "40",
-                "41",
-                "42",
-                "43",
-                "44",
-                "45",
-                "46",
-                "47",
-                "100",
-                "101",
-                "102",
-                "103",
-                "104",
-                "105",
-                "106",
-                "107",
-                "0",
-                "0"
+                "40", "41", "42", "43", "44", "45", "46", "47", "100", "101",
+                "102", "103", "104", "105", "106", "107", "0", "0"
             ]
         ]
 
@@ -325,20 +428,38 @@ class Screen():
             return '\033['+str(y)+';'+str(x)+'H'
 
     def draw_no_redraw(self, window):
-        """Drow a window onto the screen without redrawing other windows"""
+        """Draw a window onto the screen without redrawing other windows.
+        Returns True if window was drawn False otherwise."""
+        if window.isDestroyed:
+            return False
         a = window.draw()
         x = window.x
         y = window.y
         for i in range(len(a)):
             self.setChar(a[i], x, y+i)
+        return True
 
-    def draw(self, window=None):
-        """Redraw a window onto the screen with max priority"""
+    def draw(self, window=None, forceRedrawMode="clear"):
+        """
+        Redraw a window onto the screen with max priority
+        forceRedrawMode can be:
+            - "clear"
+            - "oldAsBackground"
+            - "forcedBackground"
+        """
+        if forceRedrawMode.lower() == "clear":
+            self.clear()
+        if forceRedrawMode.lower() == "oldasbackground":
+            print("\033[s")
+        if forceRedrawMode.lower() == "forcedbackground":
+            self.setScreen(self.background)
         windows = sorted(self.windows,
                          key=lambda window: window.priority,
                          reverse=False)
         # self.clear()
         for i in range(len(windows)):
+            if windows[i].isDestroyed:
+                continue
             if windows[i] is not None:
                 if window is not None:
                     if windows[i].id == window.id:
@@ -353,17 +474,8 @@ class Screen():
                         self.draw_no_redraw(windows[i])
         if window is not None:
             self.draw_no_redraw(window)
-    # def re_draw(self, windowToUpdate):
-    #     windows = sorted(self.windows, key=lambda window: window.priority,
-    #                      reverse=True)
-    #     x = windowToUpdate.x
-    #     y = windowToUpdate.y
-    #     toX = windowToUpdate.area["x"] + x
-    #     toY = windowToUpdate.area["y"] + y
-    #     for window in windows:
-    #         if(window.x > x and window.x < toX) and \
-    #                 (window.y > y and window.y < toY):
-    #             toDraw.append(window.draw())
+        if forceRedrawMode.lower() == "oldasbackground":
+            print("\033[u")
 
     def setScreen(self, screen):
         sys.stdout.write('\033[2J\033[0;0H')
@@ -373,7 +485,8 @@ class Screen():
                 print(screen[i])
                 # '\033[0;'+i+'H'+
             except Exception as e:
-                raise Exception("WARNING: List smaller than the screen")
+                pass
+                # raise Exception("WARNING: List smaller than the screen")
         return
 
     def clear(self):
@@ -433,31 +546,34 @@ class Screen():
 
 
 if __name__ == "__main__":
-    import argparse
-    p = argparse.ArgumentParser(description='Generate a window')
-    p.add_argument("-n", "--name", dest='name')
-    p.add_argument("-t", "--text", dest='text')
-    p.add_argument("-b", "--buttons", dest='buttons')
-    p.add_argument('-x', '--posX', dest='x')
-    p.add_argument('-y', '--posY', dest='y')
-    p.add_argument('-fh', '--forcedHeigth', dest='fh')
-    p.add_argument('-fw', '--forcedWidth', dest='fw')
-    p.add_argument('-sb', '--selectedButton', dest='sb')
-    args = p.parse_args()
-    s = Screen()
-
-    s.clear()
-    # s.setChar("Args: "+str(args), 0, 20, color="red")
-    # nazwa = "a"  # raw_input("nazwa>")
-    window = Window(args.name)  # "TEST!!")  #
-    window.setText(args.text.replace("\\n", "\n"))  # "1\n2\n3\n4\n5\n6"
-    # args.text.replace("\\n", "\n"))
-    # longInput("tekst(ctrl+c, lub puste kończy)>"))
-    window.y = int(args.x)  # 1  #
-    window.x = int(args.y)  # 1  #
-    window.forcedHeigth = int(args.fh)  # -1  #
-    window.forcedWidth = int(args.fw)  # -1  #
-    window.buttons = args.buttons.split(",")  # ["OK", "Nie OK"]  #
-    window.selectedButton = int(args.sb)   # \-1  #
-    s.draw(window)
-    # # s.setChar("======Screen Test======", 0, 0, color="red")
+    print("This is not a normal python(3) program.")
+    print("This is a library for creating ncurses-like windows")
+    exit(0)
+#     import argparse
+#     p = argparse.ArgumentParser(description='Generate a window')
+#     p.add_argument("-n", "--name", dest='name')
+#     p.add_argument("-t", "--text", dest='text')
+#     p.add_argument("-b", "--buttons", dest='buttons')
+#     p.add_argument('-x', '--posX', dest='x')
+#     p.add_argument('-y', '--posY', dest='y')
+#     p.add_argument('-fh', '--forcedHeigth', dest='fh')
+#     p.add_argument('-fw', '--forcedWidth', dest='fw')
+#     p.add_argument('-sb', '--selectedButton', dest='sb')
+#     args = p.parse_args()
+#     s = Screen()
+#
+#     s.clear()
+#     # s.setChar("Args: "+str(args), 0, 20, color="red")
+#     # nazwa = "a"  # raw_input("nazwa>")
+#     window = Window(args.name)  # "TEST!!")  #
+#     window.setText(args.text.replace("\\n", "\n"))  # "1\n2\n3\n4\n5\n6"
+#     # args.text.replace("\\n", "\n"))
+#     # longInput("tekst(ctrl+c, lub puste kończy)>"))
+#     window.y = int(args.x)  # 1  #
+#     window.x = int(args.y)  # 1  #
+#     window.forcedHeigth = int(args.fh)  # -1  #
+#     window.forcedWidth = int(args.fw)  # -1  #
+#     window.buttons = args.buttons.split(",")  # ["OK", "Nie OK"]  #
+#     window.selectedButton = int(args.sb)   # \-1  #
+#     s.draw(window)
+#     # # s.setChar("======Screen Test======", 0, 0, color="red")
