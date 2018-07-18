@@ -1,4 +1,4 @@
-import mmw3 as mmw
+import mmw
 # import time
 # import time
 # print("\033[2J")
@@ -60,6 +60,7 @@ def disp(a):
 
 # w.text = 'DDDDDDDDDDUUUUUUUUUUUUPPPPPPPPPPAAAAAAAAAAAAAAAAAAAAA'
 # w.styleOptions["ButtonAlignment"] = mmw.POS_RIGHT
+w.styleOptions['ButtonAlignment'] = mmw.POS_RIGHT
 s.draw(w)
 s.add_window(w)
 s.bind("`", lambda a: brk())
@@ -69,5 +70,5 @@ s.bind(['\\M', {'xStart': 0, 'xEnd': s.size[0], 'yStart': 0,
 s.bind('\x03', disp)
 w.forcedWidth = s.size[0] - 3
 w.forcedHeight = s.size[1] - 3
-s.disableCtrlBackslash = True
+s.disableCtrlBackslash = False
 s.loop(w)
