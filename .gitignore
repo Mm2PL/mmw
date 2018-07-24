@@ -5,3 +5,13 @@ __pycache__/*
 mmw.pyc
 mmw3.pyc
 oldmmwtest.py
+.pythonrc.py
+.pythonrc.py~
+dist_mmw3.py
+getcher.py
+logger.py
+logger.pyc
+old_mmw3.py
+dist_mmw27.py
+*__pycache__*
+*.pyc
