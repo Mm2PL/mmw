@@ -1,16 +1,20 @@
 import mmw
 import os
+import time
 ekran: mmw.Screen
 if os.name == "nt":
     ekran = mmw.Screen(False)
 else:
     ekran = mmw.Screen(True)
+ekran.clearOnSIGWINCH = False
+ekran.redrawOnSIGWINCH = False
 menu = mmw.Menu("Menu")
 menu.elements = [
     {"name": 'Wybierz jedno', 'children': [
         {"name": 'Kaskadujące okna'},
         {"name": 'Poruszanie oknem'},
         {'name': 'Zmiana styli okna'},
+        {'name': 'Tęcza'},
         {'name': '----------------'},
         {'name': 'Wyjdź'}
     ]}
@@ -54,6 +58,8 @@ def handler(menu):
         ekran2 = mmw.Screen(False)
     else:
         ekran2 = mmw.Screen(True)
+    ekran2.clearOnSIGWINCH = False
+    ekran2.redrawOnSIGWINCH = False
     if menu.childopen == 0:
         okna = []
         for num in range(10):
@@ -86,6 +92,42 @@ def handler(menu):
         ekran2.add_window(w)
         ekran2.draw(w)
         ekran2.loop(w)
+    if menu.childopen == 3:
+        ekran2.clear()
+        ekran2.setCur(0, 0)
+        import math
+        r = 0
+        g = 0
+        b = 0
+
+        def mrange(stop, step):
+            for i in range(round(stop/step)):
+                yield i*step
+        try:
+            i = 0
+            while 1:
+                s = math.sin(i)
+                if s <= 0:
+                    s = 0
+                r = round(s*255)
+
+                s = math.sin(i+2)
+                if s <= 0:
+                    s = 0
+                g = round(s*255)
+
+                s = math.sin(i+4)
+                if s <= 0:
+                    s = 0
+                b = round(s*255)
+                ekran2.setCur(0, 0)
+                print(mmw.rgb(r, g, b)+'To jest tęczowe.\n', end='')
+                print('r', r, '/ 255', '| g', g, '/ 255', '| b', b, '/ 255',
+                      end='\033[K')
+                time.sleep(0.005)
+                i += 0.01
+        except KeyboardInterrupt:
+            pass
     if menu.childopen == len(menu.elements[0]['children'])-1:
         exit(0)
 

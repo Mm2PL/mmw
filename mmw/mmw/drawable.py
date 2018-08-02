@@ -5,6 +5,17 @@ lastid = 0
 
 class Drawable():
     """A drawable base."""
+    # autoWindowResize (default = True)
+    #  True - Expand the window to the texts size,
+    #  False - Don't expand
+
+    def __repr__(self):
+        if self.useRelativePos:
+            return 'mmw.Drawable(name={}) at ({}/{}, {}/{})'.format(
+                repr(self.name), self.xRel, self.x, self.yRel, self.y)
+        else:
+            return 'mmw.Drawable(name={}) at ({}, {})'.format(
+                repr(self.name), self.x, self.y)
 
     # ---------------------------------
     # self.name
@@ -78,6 +89,7 @@ class Drawable():
         self.forcedHeight = 0
         self.width = 0
         self.height = 0
+        self.autoResize = True
 
         self.parent = None
 
@@ -92,6 +104,7 @@ class Drawable():
         self._yRel = mmw.POS_CENTER
         self.handlers = {"loop": lambda *args: None,
                          "SIGWINCH": lambda this, caller: self.recalcPos()}
+        self.style = mmw.styles.DEFAULT
 
     def check_parent(self) -> bool:
         if self.parent is None:

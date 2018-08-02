@@ -14,12 +14,9 @@ class Window(mmw.Drawable):
         text (default = "")
         buttons (default = [])
         selectedButton (default = -1)
-        autoWindowResize (default = True)
-         True - Expand the window to the texts size,
-         False - Don't expand
         handlers (default = {"loop": self.buttonSelectorHandler})
         style (default = Styles.DEFAULT)
-         *check the class .styles.Styles for more info
+         *check mmw.styles.Styles for more info
     """
 
     def destroy(self, destroyChild=False):
@@ -36,7 +33,6 @@ class Window(mmw.Drawable):
         self.buttons = []
         self.widgets = {}
         self.selectedButton = -1
-        self.autoWindowResize = True
         self.handlers["loop"] = self.buttonSelectorHandler
         self.handlers["SIGWINCH"] = lambda a, b: None
         # True - expand the window to the texts size,
@@ -114,7 +110,7 @@ returns something that is not "OK" """
         if self.forcedWidth <= 0:
             temp = re.sub(r"\$\([a-zA-Z_0-9]*\)", "", text)
             temp = temp.split("\n")
-            if self.autoWindowResize:
+            if self.autoResize:
                 for i in range(len(temp)):
                     if len(temp[i]) > width:
                         width = len(temp[i])
@@ -124,7 +120,7 @@ returns something that is not "OK" """
                 raise mmw.errors.InvalidStateError("forcedWidth is required, "
                                                    "if text wrap is on.")
         else:
-            if self.autoWindowResize:
+            if self.autoResize:
                 temp = text.split("\n")
                 i = -1
                 for elem in temp:

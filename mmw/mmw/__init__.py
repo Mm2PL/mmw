@@ -17,6 +17,7 @@ from .consts import *
 from .decoding import *
 from .figlet import *
 from .formattedstring import *
+from .textfield import *
 # Drawable [V]
 # Graphic [V]
 # Menu [V]

@@ -29,7 +29,8 @@ UNICODE = {
     "MenuBar": "{name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "Format": "N/A", "EmptyText": "_"}
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+}
 UNICODE_BOLD = {
     "CornerUpLeft": "\u250F", "CornerUpRight": "\u2513",
     "CornerDownLeft": "\u2517", "CornerDownRight": "\u251B",
@@ -40,7 +41,8 @@ UNICODE_BOLD = {
     "MenuBar": "{name}   ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "Format": "N/A", "EmptyText": "_"}
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+}
 DEFAULT = {
     "CornerUpLeft": "+", "CornerUpRight": "+",
     "CornerDownLeft": "+", "CornerDownRight": "+",
@@ -51,7 +53,8 @@ DEFAULT = {
     "MenuBar": "{name}  ", "MenuBarSelected": "|{name}| ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "Format": "N/A", "EmptyText": "_"}
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+}
 ALTERNATE = {
     "CornerUpLeft": "/", "CornerUpRight": "\\",
     "CornerDownLeft": "\\", "CornerDownRight": "/",
@@ -62,5 +65,6 @@ ALTERNATE = {
     "MenuBar": "{name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "Format": "N/A", "EmptyText": "_"}
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+}
 STYLE_LIST = ["UNICODE", "UNICODE_BOLD", "DEFAULT", "ALTERNATE"]

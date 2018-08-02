@@ -3,6 +3,12 @@ import mmw
 
 class Graphic(mmw.Drawable):
     """Pseudo-graphic drawable object"""
+    def __repr__(self):
+        if self.useRelativePos:
+            return 'mmw.Graphic() at ({}/{}, {}/{})'.format(
+                self.xRel, self.x, self.yRel, self.y)
+        else:
+            return 'mmw.Graphic() at ({}, {})'.format(self.x, self.y)
 
     @property
     def text(self):

@@ -7,6 +7,14 @@ import re
 
 
 class Menu(mmw.Drawable):
+    def __repr__(self):
+        if self.useRelativePos:
+            return 'mmw.Menu(name={}) at ({}/{}, {}/{})'.format(
+                repr(self.name), self.xRel, self.x, self.yRel, self.y)
+        else:
+            return 'mmw.Menu(name={}) at ({}, {})'.format(
+                repr(self.name), self.x, self.y)
+
     def selectorHandler(self, char: str):
         """Select a button"""
         # log.slog('selectorHandler', repr(char))

@@ -18,6 +18,6 @@ def figletify(text: str, font: str, figletCmd='figlet') -> str:
 class FigletText(mmw.Graphic):
     def __init__(self, text: str, font: str ='big'):
         figtext = figletify(text, font)
-        super().__init__(figtext[0].split('\n')
-                         if figtext[0] != ''
+        super().__init__(figtext.split('\n')
+                         if figtext != ''
                          else "[FIGlet Error]")
