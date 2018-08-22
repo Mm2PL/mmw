@@ -36,9 +36,15 @@ class Menu(mmw.Drawable):
         if char == "ARROW_RIGHT":
             if self.open < len(self.elements)-1:
                 self.open += 1
+                if self.childopen > len(self.elements[self.open]['children']):
+                    self.childopen = len(self.elements[self.open]
+                                         ['children'])-1
         if char == "ARROW_LEFT":
             if self.open > 0:
                 self.open -= 1
+                if self.childopen > len(self.elements[self.open]['children']):
+                    self.childopen = len(self.elements[self.open]
+                                         ['children'])-1
         if char == "ARROW_DOWN":
             if self.childopen < len(self.elements[self.open]['children'])-1:
                 self.childopen += 1

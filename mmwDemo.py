@@ -99,10 +99,6 @@ def handler(menu):
         r = 0
         g = 0
         b = 0
-
-        def mrange(stop, step):
-            for i in range(round(stop/step)):
-                yield i*step
         try:
             i = 0
             while 1:
@@ -122,8 +118,10 @@ def handler(menu):
                 b = round(s*255)
                 ekran2.setCur(0, 0)
                 print(mmw.rgb(r, g, b)+'To jest tęczowe.\n', end='')
-                print('r', r, '/ 255', '| g', g, '/ 255', '| b', b, '/ 255',
-                      end='\033[K')
+                print('\033[0mr ', r, (3-len(str(r)))*' ', ' / 255',
+                      '| g ', g, (3-len(str(g)))*' ', ' / 255',
+                      '| b ', b, (3-len(str(b)))*' ', ' / 255',
+                      end='\033[K', sep='')
                 time.sleep(0.005)
                 i += 0.01
         except KeyboardInterrupt:
