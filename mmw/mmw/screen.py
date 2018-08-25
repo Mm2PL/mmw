@@ -92,6 +92,7 @@ class Screen():
         self.redrawOnSIGWINCH = True
         self.disableCtrlBackslash = False
         self.bind('\x1c', self.forcefulExit)
+        self.oldframe = None
 
     def redraw(self):
         self.size = os.get_terminal_size()
@@ -134,48 +135,102 @@ class Screen():
             - "forcedBackground"  - Doesn't clear the screen
                                   |  (uses Screen.background)
         """
-        if forceRedrawMode.lower() == "clear":
-            self.clear()
-        # if forceRedrawMode.lower() == "oldasbackground":
-        #     print("\033[s")
-        elif forceRedrawMode.lower() == "forcedbackground":
-            self.setScreen(self.background)
-        else:
-            raise mmw.errors.InvalidStateError('forceRedrawMode can only be '
-                                               '\'clear\' '
-                                               'or \'forcedBackground\' '
-                                               '(case insensitive)')
+        canvas = []
+        for y in range(self.size[1]):
+            canvas.append(['']*self.size[0])
+        # canvas = [['']*self.size[0]]*self.size[1]
         windows = sorted(self.windows,
                          key=lambda window: window.priority,
                          reverse=False)
-        # self.clear()
-        for i in range(len(windows)):
-            if windows[i].isDestroyed:
-                continue
-            if windows[i] is not None:
-                if window is not None:
-                    if windows[i].id == window.id:
-                        continue
-                if windows[i].requiresRedrawing:
-                    if windows[i].lastDraw != "N/A":
-                        for a in windows[i].lastDraw:
-                            self.setChar(mmw.format(a),
-                                         windows[i].x,
-                                         windows[i].y)
-                    else:
-                        self.draw_no_redraw(windows[i])
-                # else:
-                #     self.draw_no_redraw(windows[i])
         if window is not None:
-            self.draw_no_redraw(window)
-        # if forceRedrawMode.lower() == "oldasbackground":
-        #     print("\033[u")
+            windows.append(window)
+        for w in windows:
+            if w.hidden:
+                continue
+            draw = ['']
+            if w.requiresRedrawing:
+                draw = w.draw()
+            else:
+                draw = w.lastDraw
+                if draw == 'N/A':
+                    #      ^~~~~ Default value, window has not been drawn
+                    #            before
+                    draw = w.draw()
+            # print(draw)
+            # input('.')
+            for y, yelem in enumerate(draw):
+                for x, xelem in enumerate(yelem):
+                    # print(xelem)
+                    canvas[y][x] = xelem
+            # print(canvas)
+            # input('.2')
+        print(self.setCur(0, 0, True), end='', flush=True)
+        # emptyline = ['']*self.size[0]
+        for y, yelem in enumerate(canvas):
+            # if yelem == emptyline:
+            #     continue
+            line = ''.join(yelem)
+            if line == '':
+                canvas.remove(yelem)
+                continue
+            else:
+                print('\033[2K', line, sep='', end='\n')
+            # for x, xelem in enumerate(yelem):
+            #     if xelem == '':
+            #         continue
+            #     print(xelem, end='')
+        # print()
+        if self.oldframe is not None:
+            # print(len(self.oldframe), len(canvas))
+            # input('.')
+            for i in range(len(self.oldframe) - len(canvas)+1):
+                print('\033[2K')
+        # print()
+        self.oldframe = canvas
+        # return canvas
+        # ------------------------------------
+        # if forceRedrawMode.lower() == "clear":
+        #     self.clear()
+        # # elif forceRedrawMode.lower() == "oldasbackground":
+        # #     self.setCur(0, 0)
+        # elif forceRedrawMode.lower() == "forcedbackground":
+        #     self.setScreen(self.background)
+        # else:
+        #     raise mmw.errors.InvalidStateError('forceRedrawMode can only be '
+        #                                        '\'clear\' '
+        #                                        'or \'forcedBackground\' '
+        #                                        '(case insensitive)')
+        # windows = sorted(self.windows,
+        #                  key=lambda window: window.priority,
+        #                  reverse=False)
+        # # self.clear()
+        # for i in range(len(windows)):
+        #     if windows[i].isDestroyed:
+        #         continue
+        #     if windows[i] is not None:
+        #         if window is not None:
+        #             if windows[i].id == window.id:
+        #                 continue
+        #         if windows[i].requiresRedrawing:
+        #             if windows[i].lastDraw != "N/A":
+        #                 for a in windows[i].lastDraw:
+        #                     self.setChar(mmw.format(a),
+        #                                  windows[i].x,
+        #                                  windows[i].y)
+        #             else:
+        #                 self.draw_no_redraw(windows[i])
+        #         # else:
+        #         #     self.draw_no_redraw(windows[i])
+        # if window is not None:
+        #     self.draw_no_redraw(window)
+        # # if forceRedrawMode.lower() == "oldasbackground":
+        # #     print("\033[u")
 
     def setScreen(self, screen: typing.List[str]):
         """
         Set the screen to the list in the screen argument""" \
         + """(a list of strings)"""
-        print('\033[2J\033[0;0H', end='', flush=True)
+        print('\033[0;0H', end='', flush=True)
         y = self.size[1]
         for i in range(y):
             try:

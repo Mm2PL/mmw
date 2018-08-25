@@ -18,6 +18,13 @@ class Window(mmw.Drawable):
         style (default = Styles.DEFAULT)
          *check mmw.styles.Styles for more info
     """
+    def __repr__(self):
+        if self.useRelativePos:
+            return 'mmw.Window(name={}) at ({}/{}, {}/{})'.format(
+                repr(self.name), self.xRel, self.x, self.yRel, self.y)
+        else:
+            return 'mmw.Window(name={}) at ({}, {})'.format(
+                repr(self.name), self.x, self.y)
 
     def destroy(self, destroyChild=False):
         """Destroy the window"""
@@ -139,12 +146,12 @@ returns something that is not "OK" """
             # w = self.forcedWidth
             width = self.forcedWidth + 1
 
-        visname = re.sub(r"\$\([A-Za-z_0-9]*\)", "", self.name)
+        visname = self.name
         spl = round((width - len(visname))/2)
         spr = width - (spl+len(visname))
         win = [self.style["CornerUpLeft"]
                + (self.style["TitleFiller"]*spl)
-               + self.name
+               + str(self.name)
                + (self.style["TitleFiller"]*spr)
                + self.style["CornerUpRight"]]
         if "menu" in self.widgets.keys():
