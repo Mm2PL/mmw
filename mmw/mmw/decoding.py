@@ -1,12 +1,10 @@
-# from .consts import TAB, RETURN, ARROW_UP, ARROW_DOWN, ARROW_LEFT, \
-#     ARROW_RIGHT, INSERT, HOME, PAGE_UP, PAGE_DOWN, END, DELETE
 import mmw
 import typing
-# import consts
 specialChars = ["\033", "\xe0", '\x00']
 
 
 def decode(keySeq: typing.List[str]) -> str:
+    """Check the keylist and return the key name"""
     try:
         keySeq = str(''.join(keySeq), 'ansi')
     except TypeError:
@@ -63,12 +61,15 @@ def decode(keySeq: typing.List[str]) -> str:
                     return mmw.consts.INSERT
 
 
-def mouseClickDecode(charSeq):
+def mouseClickDecode(charSeq) -> dict:
+    """Check where the user clicked the mouse
+    -> dict,
+    keys: 'button', 'modifiers', 'x', 'y'
+    """
     space = charSeq[0]
     x = charSeq[1]
     y = charSeq[2]
     code = format(ord(space), "=7b").replace(" ", "0")
-    # print(code)
     # R0CMSXX
     # R scRoll
     # M Meta/Alt

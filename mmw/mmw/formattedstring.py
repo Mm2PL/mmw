@@ -5,7 +5,7 @@ this = typing.TypeVar('this', bound='FormattedString')
 
 
 class FormattedString(str):
-    """A formatted string."""
+    """A formatted string. (duh)"""
 
     def __init__(self, string: str):
         self.string = mmw.format(string)

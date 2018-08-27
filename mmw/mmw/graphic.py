@@ -32,7 +32,8 @@ class Graphic(mmw.Drawable):
         #                             'text cannot have a length of 0 or less')
         self.text = text
 
-    def draw(self):
+    def draw(self) -> str:
+        """Return self.text"""
         return self._text
 
     # def checkSize(self):

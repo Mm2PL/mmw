@@ -127,7 +127,7 @@ class Screen():
             self.setChar(mmw.formatting.format(a[i]), x, y+i)
         return True
 
-    def draw(self, window: mmw.Drawable=None, forceRedrawMode="clear"):
+    def draw(self, window: mmw.Drawable=None):
         """
         Redraw a window onto the screen with max priority
         forceRedrawMode can be (case insensitive):
@@ -135,9 +135,10 @@ class Screen():
             - "forcedBackground"  - Doesn't clear the screen
                                   |  (uses Screen.background)
         """
+        # self.clear()
         canvas = []
         for y in range(self.size[1]):
-            canvas.append(['']*self.size[0])
+            canvas.append([' ']*self.size[0])
         # canvas = [['']*self.size[0]]*self.size[1]
         windows = sorted(self.windows,
                          key=lambda window: window.priority,
@@ -161,25 +162,36 @@ class Screen():
             for y, yelem in enumerate(draw):
                 for x, xelem in enumerate(yelem):
                     # print(xelem)
-                    canvas[y][x] = xelem
+                    try:
+                        canvas[y+w.y][x+w.x] = xelem
+                    except IndexError:
+                        continue
             # print(canvas)
             # input('.2')
+        canvas.reverse()
+        for i in canvas.copy():
+            if ''.join(i).isspace():
+                canvas.remove(i)
+                continue
+            break
+            # print(i)
+        canvas.reverse()
+
         print(self.setCur(0, 0, True), end='', flush=True)
         # emptyline = ['']*self.size[0]
+        # lastNonEmptyLine = -1
         for y, yelem in enumerate(canvas):
             # if yelem == emptyline:
             #     continue
             line = ''.join(yelem)
-            if line == '':
-                canvas.remove(yelem)
-                continue
-            else:
-                print('\033[2K', line, sep='', end='\n')
+            print('\033[2K', line, sep='', end='\n')
+            # lastNonEmptyLine = int(y)
             # for x, xelem in enumerate(yelem):
             #     if xelem == '':
             #         continue
             #     print(xelem, end='')
         # print()
+
         if self.oldframe is not None:
             # print(len(self.oldframe), len(canvas))
             # input('.')
@@ -426,7 +438,7 @@ class Screen():
             if char == '\x1c':
                 w.selectedButton = 1
                 break
-            if char in ['1', '2', '3']:
+            if char in ['1', '2', '3', '4']:
                 w.selectedButton = int(char)-1
             if char == '\n' or char == '\r':
                 break
@@ -443,6 +455,13 @@ class Screen():
         if w.selectedButton == 2:
             print('\n[Screen/forcefulExit()] Calling exit()')
             exit()
+        if w.selectedButton == 3:
+            self.draw()
+            ###
+            import pdb
+            pdb.set_trace()
+            ###
+            return
 
     def bind(self, keySeq, function):
         """Bind a key to a function (Screen.loop())

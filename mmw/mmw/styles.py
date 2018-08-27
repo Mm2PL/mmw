@@ -26,7 +26,7 @@ UNICODE = {
     "ButtonSelected": " [>{button}<] ",
     "ButtonNotSelected": " [ {button} ] ",
     "BorderVertical": "\u2502", "BorderHorizontal": "\u2500",
-    "MenuBar": "{name}  ", "MenuBarSelected": " [{name}] ",
+    "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
     "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
@@ -38,7 +38,7 @@ UNICODE_BOLD = {
     "ButtonSelected": " [>{button}<] ",
     "ButtonNotSelected": " [ {button} ] ",
     "BorderVertical": "\u2503", "BorderHorizontal": "\u2501",
-    "MenuBar": "{name}   ", "MenuBarSelected": " [{name}] ",
+    "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
     "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
@@ -50,7 +50,7 @@ DEFAULT = {
     "ButtonSelected": " [>{button}<] ",
     "ButtonNotSelected": " [ {button} ] ",
     "BorderVertical": "|", "BorderHorizontal": "-",
-    "MenuBar": "{name}  ", "MenuBarSelected": "|{name}| ",
+    "MenuBar": "  {name}  ", "MenuBarSelected": " |{name}| ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
     "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
@@ -62,7 +62,7 @@ ALTERNATE = {
     "ButtonSelected": " [>{button}<] ",
     "ButtonNotSelected": " [ {button} ] ",
     "BorderVertical": "|", "BorderHorizontal": "-",
-    "MenuBar": "{name}  ", "MenuBarSelected": " [{name}] ",
+    "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
     "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'

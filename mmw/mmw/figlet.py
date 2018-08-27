@@ -16,6 +16,7 @@ def figletify(text: str, font: str, figletCmd='figlet') -> str:
 
 
 class FigletText(mmw.Graphic):
+    """Runs figletify(text, font) and uses the results as the text"""
     def __init__(self, text: str, font: str ='big'):
         figtext = figletify(text, font)
         super().__init__(figtext.split('\n')

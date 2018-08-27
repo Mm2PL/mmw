@@ -1,6 +1,9 @@
 import mmw
 import os
 import time
+# from pdb_clone import pdbhandler; pdbhandler.register()
+# print(os.getpid())
+# input('.')
 ekran: mmw.Screen
 if os.name == "nt":
     ekran = mmw.Screen(False)
@@ -10,21 +13,20 @@ ekran.clearOnSIGWINCH = False
 ekran.redrawOnSIGWINCH = False
 menu = mmw.Menu("Menu")
 menu.elements = [
-    {"name": 'Wybierz jedno', 'children': [
-        {"name": 'Kaskadujące okna'},
-        {"name": 'Poruszanie oknem'},
-        {'name': 'Zmiana styli okna'},
-        {'name': 'Tęcza'},
+    {"name": 'Pick', 'children': [
+        {"name": 'Cascading windows'},
+        {"name": 'Moving window'},
+        {'name': 'Window styles'},
+        {'name': 'Rainbow'},
         {'name': '----------------'},
-        {'name': 'Wyjdź'}
+        {'name': 'EXIT'}
     ]}
 ]
 menu.open = 0
 menu.childopen = 0
 
 
-def styleHandler(char, okno):
-    # m = mmw.KeyList  # Skrót do klasy, nie definicja obiektu
+def styleHandler(char: str, okno: mmw.Window):
     if char.lower() == 'u':
         okno.style = mmw.styles.UNICODE
     elif char.lower() == 'a':
@@ -35,11 +37,11 @@ def styleHandler(char, okno):
         okno.style = mmw.styles.UNICODE_BOLD
     elif char == '\r':
         return 'END'
+    okno.requiresRedrawing = True
     # .
 
 
-def windowHandler(char, okno):
-    # m = mmw.KeyList  # Skrót do klasy, nie definicja obiektu
+def windowHandler(char: str, okno: mmw.Window):
     if char == mmw.ARROW_UP:
         okno.y -= 1
     elif char == mmw.ARROW_DOWN:
@@ -50,9 +52,11 @@ def windowHandler(char, okno):
         okno.x += 1
     elif char == '\r':
         return 'END'
+    okno.requiresRedrawing = True
 
 
 def handler(menu):
+    ekran.clear()
     ekran2: mmw.Screen
     if os.name == "nt":
         ekran2 = mmw.Screen(False)
@@ -63,20 +67,20 @@ def handler(menu):
     if menu.childopen == 0:
         okna = []
         for num in range(10):
-            w = mmw.Window('Okno')
-            w.text = 'test'
+            w = mmw.Window('Window')
+            w.text = 'TEST'
             w.x = num
             w.y = num
             okna.append(w)
             ekran2.add_window(w)
         ekran2.draw()
         string = mmw.FormattedString(
-            '$(yellow)[Naciśnij $(green)coś$(yellow)]')
+            '$(yellow)[Press $(green)something$(yellow)]$(reset)')
         ekran2.setChar(str(string), 0, ekran2.size[1]-2)
         ekran2.getChar()
     if menu.childopen == 1:
         w = mmw.Window("Okno")
-        w.text = "Przesuń to okno za pomocą strzałek"
+        w.text = "You can move this window using your arrow keys"
         w.x = 1
         w.y = 1
         w.handlers['loop'] = lambda char: windowHandler(char, w)
@@ -85,8 +89,8 @@ def handler(menu):
         ekran2.loop(w)
     if menu.childopen == 2:
         w = mmw.Window("Okno")
-        w.text = 'u -- Unicode\nd -- Domyślny\na -- Alternatywny\n'\
-            'b -- Unicode pogrubiony'
+        w.text = 'u -- Unicode\nd -- Default\na -- Alternate\n'\
+            'b -- Unicode bold'
         w.useRelativePos = True
         w.handlers['loop'] = lambda char: styleHandler(char, w)
         ekran2.add_window(w)
@@ -101,7 +105,10 @@ def handler(menu):
         b = 0
         try:
             i = 0
+            # frameStart = time.time()
+            # frameEnd = time.time()
             while 1:
+
                 s = math.sin(i)
                 if s <= 0:
                     s = 0
@@ -117,7 +124,7 @@ def handler(menu):
                     s = 0
                 b = round(s*255)
                 ekran2.setCur(0, 0)
-                print(mmw.rgb(r, g, b)+'To jest tęczowe.\n', end='')
+                print(mmw.rgb(r, g, b)+'RAINBOW, but without rain\n', end='')
                 print('\033[0mr ', r, (3-len(str(r)))*' ', ' / 255',
                       '| g ', g, (3-len(str(g)))*' ', ' / 255',
                       '| b ', b, (3-len(str(b)))*' ', ' / 255',
@@ -128,6 +135,7 @@ def handler(menu):
             pass
     if menu.childopen == len(menu.elements[0]['children'])-1:
         exit(0)
+    ekran.clear()
 
 
 menu.handlers["menuClicked"] = handler

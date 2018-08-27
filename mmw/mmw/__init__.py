@@ -3,8 +3,12 @@
 # Flake8: noqa
 import sys
 if sys.version[0] == '2':
-    print('Use python version 3')
-    exit()
+    print('\033[41mThis version of mmw is not compatible with python2')
+    print('Use may experience syntax errors, because I used type hinting')
+    try:
+        raw_input('\033[40m[Press enter to continue anyway]\033[0m')
+    except (EOFError, KeyboardInterrupt):
+        exit()
 from .drawable import *
 from .graphic import *
 from .menu import *

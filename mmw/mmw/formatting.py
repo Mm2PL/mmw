@@ -49,7 +49,7 @@ effects = {
 
 
 def getColor(color, bg=False):
-    """Return a color"""
+    """Check fgcolors and bgcolors and return the code, returns '0' if fails"""
     try:
         if bg:
             return bgcolors[color]
@@ -59,7 +59,8 @@ def getColor(color, bg=False):
         return "0"
 
 
-def rgb(red: int, green: int, blue: int, background=False):
+def rgb(red: int, green: int, blue: int, background=False) -> str:
+    """Return the ANSI escape that generates the color"""
     if background:
         return "\033[48;2;"+str(red)+";"+str(green)+";"+str(blue)+"m"
     else:

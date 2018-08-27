@@ -9,14 +9,14 @@ import re
 
 
 class Window(mmw.Drawable):
-    """- a window class
+    """a window class
     attributes (own):
         text (default = "")
         buttons (default = [])
         selectedButton (default = -1)
         handlers (default = {"loop": self.buttonSelectorHandler})
-        style (default = Styles.DEFAULT)
-         *check mmw.styles.Styles for more info
+        style (default = styles.DEFAULT)
+         *check mmw.styles for more info
     """
     def __repr__(self):
         if self.useRelativePos:

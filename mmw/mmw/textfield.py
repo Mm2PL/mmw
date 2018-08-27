@@ -3,6 +3,7 @@ import typing
 
 
 class TextField(mmw.Drawable):
+    """A Textfield (WIP)"""
     def __repr__(self) -> str:
         if self.useRelativePos:
             return 'mmw.TextField(type=mmw.{}, name={}) at ({}/{}, {}/{})'.\

@@ -107,6 +107,7 @@ class Drawable():
         self.style = mmw.styles.DEFAULT
 
     def check_parent(self) -> bool:
+        """Check if the parent is not None and is has a size property"""
         if self.parent is None:
             return False
         try:
@@ -117,6 +118,7 @@ class Drawable():
         # return True
 
     def recalcPos(self) -> typing.Tuple[int]:
+        """Recalculate the posistion, using the parent's size property"""
         self.draw()
         if not self.check_parent():
             raise mmw.InvalidStateError('Cannot recalculate the position, '

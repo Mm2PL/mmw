@@ -1,9 +1,12 @@
-class InvalidStateError(Exception):
+class InvalidStateError(RuntimeError):
+    """This error is raised when an object is in an invalid state during
+    running a method"""
     def __init__(self, message):
         self.message = message
 
 
 class FigletError(Exception):
+    """Errors from figlet, including FigletNotInstalledError"""
     def __init__(self, stderr):
         self.stderr = stderr
 
@@ -12,6 +15,8 @@ class FigletError(Exception):
 
 
 class FigletNotInstalledError(FigletError):
+    """This exception is raised when the figletify() function cannot find
+    figlet"""
     def __init__(self):
         pass
 
