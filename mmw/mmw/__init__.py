@@ -22,6 +22,7 @@ from .decoding import *
 from .figlet import *
 from .formattedstring import *
 from .textfield import *
+from .animation import *
 # Drawable [V]
 # Graphic [V]
 # Menu [V]

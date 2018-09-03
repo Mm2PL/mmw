@@ -130,10 +130,6 @@ class Screen():
     def draw(self, window: mmw.Drawable=None):
         """
         Redraw a window onto the screen with max priority
-        forceRedrawMode can be (case insensitive):
-            - "clear"             - Clears the screen before drawing on it
-            - "forcedBackground"  - Doesn't clear the screen
-                                  |  (uses Screen.background)
         """
         # self.clear()
         canvas = []

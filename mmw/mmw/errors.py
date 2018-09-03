@@ -5,6 +5,12 @@ class InvalidStateError(RuntimeError):
         self.message = message
 
 
+class FinalError(RuntimeError):
+    """This error is raised when you assign to a final variable"""
+    def __init__(self, message):
+        self.message = message
+
+
 class FigletError(Exception):
     """Errors from figlet, including FigletNotInstalledError"""
     def __init__(self, stderr):
