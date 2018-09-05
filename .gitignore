@@ -15,3 +15,9 @@ old_mmw3.py
 dist_mmw27.py
 *__pycache__*
 *.pyc
+callgraph.py
+graph.png
+mmw/build/lib/*
+mmw/dist/*
+mmw/mmw.egg-info/*
+mmwtest.py

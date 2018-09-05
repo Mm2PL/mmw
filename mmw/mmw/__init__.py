@@ -32,5 +32,5 @@ from .animation import *
 # Styles [V]
 # InvalidStateError [V] -> .errors.InvalidStateError
 # Formatting [V]
-# KeyList [V] -> consts.KeyList
+# KeyList [V] -> consts
 # KeyMap [V] -> .decoding

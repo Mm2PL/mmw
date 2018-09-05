@@ -11,14 +11,15 @@ setuptools.setup(
     description="This is a library for displaying curses-like windows",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/MaciejKtosiowski/mmw",
+    url="https://github.com/Mm2PL/mmw",
     packages=setuptools.find_packages(),
     classifiers=(
-        "Development Status :: 4 - Beta",
+        'Intended Audience :: Developers',
+        "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3.6",
         "Environment :: Console",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
-        "Topic :: Utilities"
+        'Topic :: Software Development :: Libraries'
     ),
 )
