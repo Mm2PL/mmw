@@ -23,6 +23,7 @@ from .figlet import *
 from .formattedstring import *
 from .textfield import *
 from .animation import *
+from .progressbar import *
 # Drawable [V]
 # Graphic [V]
 # Menu [V]

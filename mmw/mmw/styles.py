@@ -29,7 +29,9 @@ UNICODE = {
     "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']',
+    'ProgressFilled': '\u2588', 'ProgressEmpty': ' ',
+    'ProgressStart': '[', 'ProgressEnd': ']'
 }
 UNICODE_BOLD = {
     "CornerUpLeft": "\u250F", "CornerUpRight": "\u2513",
@@ -41,7 +43,9 @@ UNICODE_BOLD = {
     "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']',
+    'ProgressFilled': '\u2588', 'ProgressEmpty': ' ',
+    'ProgressStart': '[', 'ProgressEnd': ']'
 }
 DEFAULT = {
     "CornerUpLeft": "+", "CornerUpRight": "+",
@@ -53,7 +57,10 @@ DEFAULT = {
     "MenuBar": "  {name}  ", "MenuBarSelected": " |{name}| ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']',
+    'ProgressFilled': '-', 'ProgressHead': '>',
+    'ProgressEmpty': ' ',
+    'ProgressStart': '[', 'ProgressEnd': ']'
 }
 ALTERNATE = {
     "CornerUpLeft": "/", "CornerUpRight": "\\",
@@ -65,6 +72,8 @@ ALTERNATE = {
     "MenuBar": "  {name}  ", "MenuBarSelected": " [{name}] ",
     "CornerGeneric": "+",
     "MenuChildUnselected": " {name}", "MenuChildSelected": ">{name}",
-    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']'
+    "TextEmpty": "_", 'TextLeftBorder': '[', 'TextRightBorder': ']',
+    'ProgressFilled': '.', 'ProgressEmpty': ' ',
+    'ProgressStart': '[', 'ProgressEnd': ']'
 }
 STYLE_LIST = ["UNICODE", "UNICODE_BOLD", "DEFAULT", "ALTERNATE"]
