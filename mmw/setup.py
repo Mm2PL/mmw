@@ -6,6 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="mmw",
     version="1.0",
+    python_requires='>=3',
     author="Maciej Marciniak",
     author_email="jakis128@gmail.com",
     description="This is a library for displaying curses-like windows",
