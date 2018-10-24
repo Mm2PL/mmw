@@ -65,7 +65,7 @@ class Screen():
                     else:
                         try:
                             char = sys.stdin.read(1)
-                        except Exception:
+                        except IOError:
                             char = sys.stdin.buffer.read(1)
                 finally:
                     termios.tcsetattr(fd, termios.TCSADRAIN, old)
@@ -346,7 +346,7 @@ class Screen():
                         c = self.getChar()
                         # if loggingEnabled:
                         #     log.log('1117', repr(char), ' ', b, ' ', c)
-                        if c == 'A' or c == 'B' or c == 'C' or c == 'D':
+                        if c in ['A', 'B', 'C', 'D']:
                             activeWin.handlers["loop"](
                                 mmw.decoding.decode('\033'+b+c))
                             # if loggingEnabled:
@@ -359,8 +359,6 @@ class Screen():
                             x = self.getChar()
                             y = self.getChar()
                             press = mmw.decoding.mouseClickDecode([t, x, y])
-                            if self.inDebug:
-                                print("press:", press)
                             for bind in self.binds:
                                 if bind["keySeq"][0] != "\\M":
                                     # if loggingEnabled:
@@ -446,8 +444,12 @@ class Screen():
             print('\n[Screen/forcefulExit()] Killing pid:', pid)
             if self.platform == 'win':
                 os.kill(pid, signal.CTRL_BREAK_EVENT)
+                # This will show an error when linting on linux
+                # Please ignore it.
             else:
                 os.kill(pid, signal.SIGKILL)
+                # And this will probably too but on windows
+                # Please ignore this one too.
         if w.selectedButton == 2:
             print('\n[Screen/forcefulExit()] Calling exit()')
             exit()
