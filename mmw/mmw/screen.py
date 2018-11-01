@@ -13,111 +13,119 @@ try:
     import termios
     import tty
 except ImportError:
-    pass
+    import msvcrt
 
 
-inDebug = False
 allowColor = True
 
 
 class Screen():
     """ A screen object.
-        Screen.background - a list of strings that is used with
-                          | Screen.draw(window, forceRedrawMode)
-                          | (Only with forceRedrawMode == "forcedBackground")
+    """
 
-      """
+    def apply_options(self):
+        for k in self.options:
+            print('\033[?'+str(mmw.SO_OPTIONS[k])
+                  + ('h' if self.options[k] else 'l'), end='')
 
-    def getChar(self):
-        """Stub method(returns ^C \\x03).
-        The real method is defined by the constructor.
-        Screen.getChar() returns a single character from STDIN"""
-        return "\x03"
+    def get_char(self, force_buffer_reading=False):
+        """Return a single character from STDIN
+        Arguments:
+          force_buffer_reading (default False) -- force reading the buffer.
+                                                  Unused on Windows.
+        """
+        if os.name == 'posix':  # Linux
+            return self._get_char_linux(force_buffer_reading)
+        else:
+            return self._get_char_windows()
+
+    def _get_char_windows(self):
+        """Return a signgle character from STDIN (using msvcrt)
+        WARNING: Do NOT use this method on Linux, it WILL crash.
+        """
+        char = msvcrt.getch()  # I said do NOT run this on Linux.
+        if char == '\x1c' and self._lastchar != '\x1c':
+            self.forcefulExit()
+        self._lastchar = str(char)
+        return char
+
+    def _get_char_linux(self, force_buffer_reading=False):
+        """Get a char from STDIN (using tty, termios, sys)"""
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            char = '==N/A=='
+            if force_buffer_reading:
+                char = sys.stdin.buffer.read(1)
+            else:
+                try:
+                    char = sys.stdin.read(1)
+                except IOError:
+                    char = sys.stdin.buffer.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            if char == '\x1c' and self._lastchar != '\x1c':
+                self.forcefulExit()
+            self._lastchar = str(char)
+            return char
 
     def __init__(self, trapSIGWINCH=True):
-        """Screen constructor. Defines Screen.getChar()
-        Change trapSIGWINCH to False if you don't want to automaticly update
-        the screen on window size change"""
-        try:
-            import msvcrt
+        """Screen constructor. Define Screen.get_char()
+        Arguments:
+          trapSIGWINCH (default True) -- make changing the window size
+                                         redefine self.size
+        """
+        # Deprecated;
+        # This is here for backwards compatibility.
 
-            def getChar(notUsed=False):
-                """Get a char from STDIN (using msvcrt)"""
-                char = msvcrt.getch()
-                if char == '\x1c' and self._lastchar != '\x1c':
-                    self.forcefulExit()
-                self._lastchar = str(char)
-                return char
-            self.platform = "win"
-            self.getChar = getChar
-        except ImportError:
-            self.platform = "linux"
-
-            def getChar(forceBufferReading=False):
-                """Get a char from STDIN (using tty, termios, sys)"""
-                fd = sys.stdin.fileno()
-                old = termios.tcgetattr(fd)
-                try:
-                    tty.setraw(fd)
-                    char = '==N/A=='
-                    if forceBufferReading:
-                        char = sys.stdin.buffer.read(1)
-                    else:
-                        try:
-                            char = sys.stdin.read(1)
-                        except IOError:
-                            char = sys.stdin.buffer.read(1)
-                finally:
-                    termios.tcsetattr(fd, termios.TCSADRAIN, old)
-                    if char == '\x1c' and self._lastchar != '\x1c':
-                        # print(repr(char), repr(self._lastchar))
-                        # input('[DBG]>>>')
-                        self.forcefulExit()
-                    self._lastchar = str(char)
-                    return char
-            self.getChar = getChar
-        # if self.platform == 'linux':
-        #     tty.setcbreak(sys.stdin)
         try:
             self.size = os.get_terminal_size()
         except OSError:
             self.size = (80, 24)
-        if trapSIGWINCH and self.platform != 'win':
-            signal.signal(signal.SIGWINCH, lambda signal, frame: self.redraw())
+        if trapSIGWINCH and os.name != 'nt':
+            signal.signal(signal.SIGWINCH,
+                          lambda signal, frame: self._redraw())
         self.windows = []
         self.background = []
         self.binds = []
+        self.options = mmw.Screen_Options(mmw.SO_DEFAULTS)
+        self.apply_options()
         self._lastchar = '==N/A=='
         self.clearOnSIGWINCH = True
         self.redrawOnSIGWINCH = True
         self.disableCtrlBackslash = False
-        self.bind('\x1c', self.forcefulExit)
+        self.bind(mmw.Bind('\x1c', self.forcefulExit))
         self.oldframe = None
 
-    def redraw(self):
+    def _redraw(self):
+        """Redraw the screen
+        Triggered when the process gets the SIGWINCH signal"""
         self.size = os.get_terminal_size()
         if self.clearOnSIGWINCH:
             self.clear()
-        for w in self.windows:
-            if w.useRelativePos:
-                w.recalcPos()
-            else:
-                w.handlers["SIGWINCH"](w, self)
-            if self.redrawOnSIGWINCH:
-                w.requiresRedrawing = True
-                self.draw_no_redraw(w)
+        self.draw()
 
-    def setCur(self, x: int, y: int, returnTheEscape=False):
+    def setCur(self, x: int, y: int, return_the_escape=False):
         """Move the cursor the x and y.
-        Return the ANSI Escape, if returnTheEscape is True"""
-        if returnTheEscape:
+        Arguments:
+            return_the_escape -- don't print the ansi escape code,
+                                 just return it.
+        Return None or a string.
+        """
+        if return_the_escape:
             return '\033['+str(y)+';'+str(x)+'H'
         else:
             print('\033['+str(y)+';'+str(x)+'H', end='', flush=True)
 
     def draw_no_redraw(self, window: mmw.Drawable):
-        """Draw a window onto the screen without redrawing other windows.
-        Returns True if window was drawn, False otherwise."""
+        """DEPRECATED: do NOT use this, this will render the whole frame,
+        and the performance will be VERY BAD.
+
+        Draw a window onto the screen without redrawing other windows.
+        Arguments:
+            window -- the window that has to be drawn
+        Return True if window was drawn, False otherwise."""
         if window.isDestroyed or window.hidden:
             return False
         a = window.draw()
@@ -127,9 +135,14 @@ class Screen():
             self.setChar(mmw.formatting.format(a[i]), x, y+i)
         return True
 
-    def draw(self, window: mmw.Drawable=None):
-        """
-        Redraw a window onto the screen with max priority
+    def draw(self, window: mmw.Drawable=None, fullDraw=False):
+        """Draw the screen.
+        Parameters:
+          window (mmw.Drawable) -- the window that will be drawn with
+                                   maximum priority
+          fullDraw (boolean) -- force drawing the whole screen
+                                WARNING: using this option will have an
+                                inpact on the performace
         """
         # self.clear()
         canvas = []
@@ -153,8 +166,6 @@ class Screen():
                     #      ^~~~~ Default value, window has not been drawn
                     #            before
                     draw = w.draw()
-            # print(draw)
-            # input('.')
             for y, yelem in enumerate(draw):
                 for x, xelem in enumerate(yelem):
                     # print(xelem)
@@ -162,82 +173,38 @@ class Screen():
                         canvas[y+w.y][x+w.x] = xelem
                     except IndexError:
                         continue
-            # print(canvas)
-            # input('.2')
         canvas.reverse()
         for i in canvas.copy():
             if ''.join(i).isspace():
                 canvas.remove(i)
                 continue
             break
-            # print(i)
         canvas.reverse()
 
         print(self.setCur(0, 0, True), end='', flush=True)
-        # emptyline = ['']*self.size[0]
-        # lastNonEmptyLine = -1
         for y, yelem in enumerate(canvas):
-            # if yelem == emptyline:
-            #     continue
-            line = ''.join(yelem)
+            line = ''.join(yelem).rstrip()
+            if self.oldframe is not None and not fullDraw:
+                if len(self.oldframe) >= len(canvas):
+                    if ''.join(self.oldframe[y]).rstrip() == line:
+                        # Do not redraw lines that were drawn last time
+                        print('\n', end='')
+                        continue
+            # Join the list elements and
+            # remove trailing whitespace
             print('\033[2K', line, sep='', end='\n')
-            # lastNonEmptyLine = int(y)
-            # for x, xelem in enumerate(yelem):
-            #     if xelem == '':
-            #         continue
-            #     print(xelem, end='')
-        # print()
 
         if self.oldframe is not None:
-            # print(len(self.oldframe), len(canvas))
-            # input('.')
             for i in range(len(self.oldframe) - len(canvas)+1):
                 print('\033[2K')
-        # print()
         self.oldframe = canvas
-        # return canvas
-        # ------------------------------------
-        # if forceRedrawMode.lower() == "clear":
-        #     self.clear()
-        # # elif forceRedrawMode.lower() == "oldasbackground":
-        # #     self.setCur(0, 0)
-        # elif forceRedrawMode.lower() == "forcedbackground":
-        #     self.setScreen(self.background)
-        # else:
-        #     raise mmw.errors.InvalidStateError('forceRedrawMode can only be '
-        #                                        '\'clear\' '
-        #                                        'or \'forcedBackground\' '
-        #                                        '(case insensitive)')
-        # windows = sorted(self.windows,
-        #                  key=lambda window: window.priority,
-        #                  reverse=False)
-        # # self.clear()
-        # for i in range(len(windows)):
-        #     if windows[i].isDestroyed:
-        #         continue
-        #     if windows[i] is not None:
-        #         if window is not None:
-        #             if windows[i].id == window.id:
-        #                 continue
-        #         if windows[i].requiresRedrawing:
-        #             if windows[i].lastDraw != "N/A":
-        #                 for a in windows[i].lastDraw:
-        #                     self.setChar(mmw.format(a),
-        #                                  windows[i].x,
-        #                                  windows[i].y)
-        #             else:
-        #                 self.draw_no_redraw(windows[i])
-        #         # else:
-        #         #     self.draw_no_redraw(windows[i])
-        # if window is not None:
-        #     self.draw_no_redraw(window)
-        # # if forceRedrawMode.lower() == "oldasbackground":
-        # #     print("\033[u")
 
     def setScreen(self, screen: typing.List[str]):
+        """Draw `screen` on the screen.
+        Arguments:
+            screen -- list of strings that will be drawn
+        Return None
         """
-        Set the screen to the list in the screen argument""" \
-        + """(a list of strings)"""
         print('\033[0;0H', end='', flush=True)
         y = self.size[1]
         for i in range(y):
@@ -254,13 +221,23 @@ class Screen():
         print('\033[2J', end='', flush=True)
 
     def setChar(self, string: str, x: int, y: int, flush: bool=True):
-        """prints \\033[{y};{x}H{STRING}"""
+        """Put the terminal cursor in a specific place and print a string
+        Arguments:
+            string -- text that will be drawn
+            x -- X coordinate
+            y -- Y coordinate
+            flush (default True)-- passed down to print; flushes the buffer
+        Return None"""
         print('\033['+str(y)+';'+str(x)+'H'+str(string),
               end='', flush=flush)
 
     def add_window(self, window: mmw.Drawable, setParent: bool=True):
         """Add the window the the screen
-        The window will be drawn unless window.hidden is True."""
+        Arguments:
+            window -- window that will be added to the list
+            setParent (default True) -- automaticly set window.parent to self
+        Return None
+        """
         self.windows.append(window)
         if setParent:
             window.parent = self
@@ -268,153 +245,143 @@ class Screen():
     def loop(self, activeWindow: mmw.Drawable):
         char = ""
         activeWin = activeWindow
-        menuOpen = False
-        tabmenu = mmw.menu.Menu("Tab menu")
+        # menuOpen = False
+        # tabmenu = mmw.menu.Menu("Tab menu")
         # if loggingEnabled:
         #     log.defaultSource = 'loop'
         #     log.log('Screen.loop')
         while 1:
-            char = self.getChar()
+            char = self.get_char()
             # if loggingEnabled:
             #     log.log(repr(char))
             press = {}
-            if (char == "\r" or char == "\n") and menuOpen:
-                windows = self.windows.copy()
-                windows.reverse()
-                windows.remove(activeWin)
-                windows.insert(1, activeWin)
-                activeWin = windows[tabmenu.childopen]
-                tabmenu.hidden = True
-                menuOpen = False
+            # if (char == "\r" or char == "\n") and menuOpen:
+            #     windows = self.windows.copy()
+            #     windows.reverse()
+            #     windows.remove(activeWin)
+            #     windows.insert(1, activeWin)
+            #     activeWin = windows[tabmenu.childopen]
+            #     tabmenu.hidden = True
+            #     menuOpen = False
 
-            if char == "\t":
-                if not menuOpen:
-                    windows = self.windows.copy()
-                    windows.reverse()
-                    windows.remove(activeWin)
-                    windows.insert(1, activeWin)
-                    self.size = os.get_terminal_size()
-                    # Repostion the menu if the terminal resized.
-                    tabmenu.x = round(self.size[0]/2)
-                    tabmenu.y = round(self.size[1]/2)
-                    children = []
-                    for window in windows:
-                        name = window.name if not len(window.name) > 30\
-                            else window.name[:30]+"..."
-                        children.append({"name": name})
-                    tabmenu.elements = [
-                        {"name": "Windows", "children": children}]
-                    tabmenu.open = 0
-                    tabmenu.childopen = 0
-                    tabmenu.hidden = False
-                    self.draw(tabmenu)
-                    menuOpen = True
-                    continue
-                else:
-                    if tabmenu.open == 0:
-                        windows = self.windows.copy()
-                        windows.reverse()
-                        windows.remove(activeWin)
-                        windows.insert(1, activeWin)
-                        activeWin = windows[0]
-                    tabmenu.hidden = True
-                    menuOpen = False
-            elif char == "\033":
-                if menuOpen:
-                    b = self.getChar()
-                    if b == "[":
-                        c = self.getChar()
-                        if c == "A":  # ARROW_UP
-                            if tabmenu.childopen > 0:
-                                tabmenu.childopen -= 1
-                        if c == "B":  # ARROW_DOWN
-                            if tabmenu.childopen < \
-                                    len(tabmenu.elements[0]["children"])-1:
-                                tabmenu.childopen += 1
-                        if c == "F":  # END
-                            tabmenu.childopen = len(
-                                tabmenu.elements[0]["children"])-1
-                        if c == "H":
-                            tabmenu.childopen = 0
-                else:  # not menuOpen and char == '\033'
+            # if char == "\t":
+            #     if not menuOpen:
+            #         windows = self.windows.copy()
+            #         windows.reverse()
+            #         windows.remove(activeWin)
+            #         windows.insert(1, activeWin)
+            #         self.size = os.get_terminal_size()
+            #         # Repostion the menu if the terminal resized.
+            #         tabmenu.x = round(self.size[0]/2)
+            #         tabmenu.y = round(self.size[1]/2)
+            #         children = []
+            #         for window in windows:
+            #             name = window.name if not len(window.name) > 30\
+            #                 else window.name[:30]+"..."
+            #             children.append({"name": name})
+            #         tabmenu.elements = [
+            #             {"name": "Windows", "children": children}]
+            #         tabmenu.open = 0
+            #         tabmenu.childopen = 0
+            #         tabmenu.hidden = False
+            #         self.draw(tabmenu)
+            #         menuOpen = True
+            #         continue
+            #     else:
+            #         if tabmenu.open == 0:
+            #             windows = self.windows.copy()
+            #             windows.reverse()
+            #             windows.remove(activeWin)
+            #             windows.insert(1, activeWin)
+            #             activeWin = windows[0]
+            #         tabmenu.hidden = True
+            #         menuOpen = False
+            if char == "\033":
+                # if menuOpen:
+                #     b = self.get_char()
+                #     if b == "[":
+                #         c = self.get_char()
+                #         if c == "A":  # ARROW_UP
+                #             if tabmenu.childopen > 0:
+                #                 tabmenu.childopen -= 1
+                #         if c == "B":  # ARROW_DOWN
+                #             if tabmenu.childopen < \
+                #                     len(tabmenu.elements[0]["children"])-1:
+                #                 tabmenu.childopen += 1
+                #         if c == "F":  # END
+                #             tabmenu.childopen = len(
+                #                 tabmenu.elements[0]["children"])-1
+                #         if c == "H":
+                #             tabmenu.childopen = 0
+                # if loggingEnabled:
+                #     log.log('1112 Char: \\033; menuOpen = False')
+                b = self.get_char()
+                # if loggingEnabled:
+                #     log.log('1114', repr(char), ' ', b)
+                if b == "[":
+                    c = self.get_char()
                     # if loggingEnabled:
-                    #     log.log('1112 Char: \\033; menuOpen = False')
-                    b = self.getChar()
-                    # if loggingEnabled:
-                    #     log.log('1114', repr(char), ' ', b)
-                    if b == "[":
-                        c = self.getChar()
+                    #     log.log('1117', repr(char), ' ', b, ' ', c)
+                    if c in ['A', 'B', 'C', 'D']:
+                        activeWin.handlers["loop"](
+                            mmw.decoding.decode('\033'+b+c))
                         # if loggingEnabled:
-                        #     log.log('1117', repr(char), ' ', b, ' ', c)
-                        if c in ['A', 'B', 'C', 'D']:
-                            activeWin.handlers["loop"](
-                                mmw.decoding.decode('\033'+b+c))
+                        #     log.log('1121',
+                        #             KeyMap.decode('\033'+b+c))
+                    elif c == "M":
+                        # if loggingEnabled:
+                        #     log.log('\\033[M')
+                        t = self.get_char()
+                        x = self.get_char()
+                        y = self.get_char()
+                        press = mmw.decoding.mouseClickDecode([t, x, y])
+                        for bind in self.binds:
+                            if isinstance(bind, mmw.MouseBind):
+                                continue
+                            x_ok1 = press["x"] >= \
+                                bind.xStart
+                            x_ok2 = press["x"] <= \
+                                bind.xEnd
+                            x_ok = x_ok1 and x_ok2
+                            # del x_ok1, x_ok2
+                            y_ok1 = press["y"] >= \
+                                bind.yStart
+                            y_ok2 = press["y"] <= \
+                                bind.yEnd
+                            y_ok = y_ok1 and y_ok2
+                            # del y_ok1, y_ok2
                             # if loggingEnabled:
-                            #     log.log('1121',
-                            #             KeyMap.decode('\033'+b+c))
-                        elif c == "M":
-                            # if loggingEnabled:
-                            #     log.log('\\033[M')
-                            t = self.getChar()
-                            x = self.getChar()
-                            y = self.getChar()
-                            press = mmw.decoding.mouseClickDecode([t, x, y])
-                            for bind in self.binds:
-                                if bind["keySeq"][0] != "\\M":
-                                    # if loggingEnabled:
-                                    #     log.log("skipping: ", str(bind))
-                                    continue
-                                x_ok1 = press["x"] >= \
-                                    bind["keySeq"][1]["xStart"]
-                                x_ok2 = press["x"] <= \
-                                    bind["keySeq"][1]["xEnd"]
-                                x_ok = x_ok1 and x_ok2
-                                # del x_ok1, x_ok2
-                                y_ok1 = press["y"] >= \
-                                    bind["keySeq"][1]["yStart"]
-                                y_ok2 = press["y"] <= \
-                                    bind["keySeq"][1]["yEnd"]
-                                y_ok = y_ok1 and y_ok2
-                                # del y_ok1, y_ok2
-                                # if loggingEnabled:
-                                #     log.log("x_ok1", x_ok1)
-                                #     log.log("x_ok2", x_ok2)
-                                #     log.log("x_ok", x_ok)
-                                #
-                                #     log.log("y_ok1", y_ok1)
-                                #     log.log("y_ok2", y_ok2)
-                                #     log.log("y_ok", y_ok)
+                            #     log.log("x_ok1", x_ok1)
+                            #     log.log("x_ok2", x_ok2)
+                            #     log.log("x_ok", x_ok)
+                            #
+                            #     log.log("y_ok1", y_ok1)
+                            #     log.log("y_ok2", y_ok2)
+                            #     log.log("y_ok", y_ok)
 
-                                if x_ok and y_ok:
-
-                                    o = bind["function"]({"eventType":
-                                                          "mouseClick",
-                                                          "eventSource":
-                                                          "Screen.loop",
-                                                          "click": press,
-                                                          "bind": bind})
-                                    if o == "END":
-                                        return
-                                    # if self.inDebug:
-                                        # if loggingEnabled:
-                                        #     log.log("called")
-            elif char not in mmw.specialChars and not menuOpen:
+                            if x_ok and y_ok:
+                                bind_data = {"eventType": "mouseClick",
+                                             "eventSource": "Screen.loop",
+                                             "click": press,
+                                             "bind": bind}
+                                o = bind.function(bind_data)
+                                if o == "END":
+                                    return
+            elif char not in mmw.specialChars:
                 for bind in self.binds:
-                    if bind["keySeq"] == char:
+                    if bind.keySeq == char:
                         bind["function"]({"eventType": "keyPress",
                                           "eventSource": "Screen.loop",
                                           "bind": bind})
                         break
                 if activeWin.handlers["loop"](char) == 'END':
                     return
-            if not menuOpen:
-                self.draw(activeWin)
-            else:
-                self.draw(tabmenu)
+            self.draw(activeWin)
 
     def forcefulExit(self, event=None):
         """This function is triggered on ^\\.
-        Displays a window asking if the user realy wants to quit."""
+        Display a window asking if the user realy wants to quit.
+        """
         w = mmw.Window('^\\')
         w.text = 'Are you sure you want to quit\n' \
             + '[Enter] Accept\n' \
@@ -428,7 +395,7 @@ class Screen():
         self.clear()
         while 1:
             self.draw_no_redraw(w)
-            char = self.getChar()
+            char = self.get_char()
             if char == '\x1c':
                 w.selectedButton = 1
                 break
@@ -439,10 +406,12 @@ class Screen():
         if w.selectedButton == 0:
             self.draw()
             return
+        self.options.update(mmw.SO_DEFAULTS)
+        self.apply_options()  # reset the terminal options
         if w.selectedButton == 1:
             pid = os.getpid()
             print('\n[Screen/forcefulExit()] Killing pid:', pid)
-            if self.platform == 'win':
+            if os.name == 'nt':
                 os.kill(pid, signal.CTRL_BREAK_EVENT)
                 # This will show an error when linting on linux
                 # Please ignore it.
@@ -461,34 +430,26 @@ class Screen():
             ###
             return
 
-    def bind(self, keySeq, function):
+    def bind(self, bind_obj):
         """Bind a key to a function (Screen.loop())
-        keySeq - Key to bind to ex. '\\t', 'D', '\\r'
-            # WARNING: There is one Exception:
-            ['\\M', {'xStart': int, 'xEnd': int,
-                     'yStart': int, 'yEnd': int}]
-        function - Function to bind ex. 'lambda event: exit(0)', some_func"""
-        if keySeq is None:
-            raise mmw.InvalidStateError("keySeq cannot be None\n"
-                                        "Screen.bind(self, >keySeq...)")
-        if function is None:
-            raise mmw.InvalidStateError("The function cannot be None\n"
-                                        "Screen.bind(self, keySeq, >function)")
-        bind = {"keySeq": keySeq, "function": function}
-        self.binds.append(bind)
-        return bind
+        Arguments:
+            bind_obj -- A Bind(or MouseBind) object."""
+        if not isinstance(bind_obj, mmw.Bind):
+            raise TypeError('bind_obj must be of type mmw.Bind or subclass')
+        self.binds.append(bind_obj)
+        return bind_obj
 # def custom_input(self, prompt, handler=None):
 #     inputed = ""
 #     waiting = []
 #     inMouseMode = False
 #     while 1:
 #         if not inMouseMode:
-#             char = self.getChar()
+#             char = self.get_char()
 #         else:
-#             char = "x"+str(ord(self.getChar(True)))
+#             char = "x"+str(ord(self.get_char(True)))
 #         print("char: ", repr(char), "waiting: ", waiting, "imm",
 #               inMouseMode)
-#         # Call self.getChar() forcing to output a string with the special
+#         # Call self.get_char() forcing to output a string with the special
 #         # mmw.formatting
 #         # ex. "33"(ASCII !)
 #         # (required for mouse detection, since there is no char
@@ -498,15 +459,15 @@ class Screen():
 #             exit(0)
 #         if char == "\033":
 #             # print('033')
-#             b = self.getChar(True)
+#             b = self.get_char(True)
 #             if b == b"[":
 #                 # print('[')
-#                 c = self.getChar(True)
+#                 c = self.get_char(True)
 #                 if c == b"M":
 #                     # print("M")
-#                     ptype = self.getChar(True)
-#                     x = self.getChar(True)
-#                     y = self.getChar(True)
+#                     ptype = self.get_char(True)
+#                     x = self.get_char(True)
+#                     y = self.get_char(True)
 #                     etype = "UNKNOWN"
 #                     if ptype == b" ":
 #                         etype = "LMB_PRESS"

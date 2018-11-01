@@ -18,6 +18,7 @@ menu.elements = [
         {"name": 'Moving window'},
         {'name': 'Window styles'},
         {'name': 'Rainbow'},
+        {'name': 'Spinny thing'},
         {'name': '----------------'},
         {'name': 'EXIT'}
     ]}
@@ -133,9 +134,39 @@ def handler(menu):
                 i += 0.01
         except KeyboardInterrupt:
             pass
+    if menu.childopen == 4:
+        a = mmw.Animation()
+        spin = [
+            mmw.Graphic(['-']),
+            mmw.Graphic(['\\']),
+            mmw.Graphic(['|']),
+            mmw.Graphic(['/'])
+        ]
+        a.frames = spin
+        a.autoAdvance = False
+        TIMER_TEMPLATE = ('You spin me right round, baby right round\n'
+                          'Timer: {0:.1f}')
+        timer = mmw.Graphic(TIMER_TEMPLATE.format(0))
+        timer.y += 1
+        ekran2.add_window(timer)
+        start = time.time()
+        ekran2.clear()
+        try:
+            while 1:
+                try:
+                    a.frame = a._frame + 1
+                except ValueError:
+                    a.frame = 0
+                timer.text = TIMER_TEMPLATE.format(time.time()-start)
+                timer.requiresRedrawing = True
+                ekran2.draw()
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
     if menu.childopen == len(menu.elements[0]['children'])-1:
         exit(0)
     ekran.clear()
+    ekran.draw(None, True)  # Force redrawing the screen
 
 
 menu.handlers["menuClicked"] = handler

@@ -16,7 +16,7 @@ window.buttons = ['And', 'some', 'buttons']
 window.selectedButton = 0  # Select the first button
 screen.clear()  # Screen.draw() doesn't clear the screen by itself
 screen.draw()  # Draw the screen
-screen.getChar()  # Wait until the user presses a key
+screen.get_char()  # Wait until the user presses a key
 ```
 Output:
 ```

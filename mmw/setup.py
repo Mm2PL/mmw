@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mmw",
-    version="1.0",
+    version="1.1",
     python_requires='>=3',
     author="Maciej Marciniak",
     author_email="jakis128@gmail.com",
@@ -14,6 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Mm2PL/mmw",
     packages=setuptools.find_packages(),
+    license='GPL-3',
     classifiers=(
         'Intended Audience :: Developers',
         "Development Status :: 5 - Production/Stable",
