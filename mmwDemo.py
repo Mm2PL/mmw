@@ -80,7 +80,7 @@ def handler(menu):
         ekran2.setChar(str(string), 0, ekran2.size[1]-2)
         ekran2.getChar()
     if menu.childopen == 1:
-        w = mmw.Window("Okno")
+        w = mmw.Window("Window")
         w.text = "You can move this window using your arrow keys"
         w.x = 1
         w.y = 1
@@ -89,7 +89,7 @@ def handler(menu):
         ekran2.draw(w)
         ekran2.loop(w)
     if menu.childopen == 2:
-        w = mmw.Window("Okno")
+        w = mmw.Window("Window")
         w.text = 'u -- Unicode\nd -- Default\na -- Alternate\n'\
             'b -- Unicode bold'
         w.useRelativePos = True
